@@ -4,8 +4,6 @@ import { showMainView, showEditView, setEditingPresetId, getEditingPresetId } fr
 import { loadSettings, loadPresets, savePresets } from './storage.js';
 import { isCalendarTab, getActiveTab, sendMessageToTab } from './tabs.js';
 import { renderPresets } from '../components/preset-list.js';
-import { CALENDAR_INIT_DELAY_MS } from '../../shared/constants.js';
-import { waitForPageTransition } from '../utils/page-transition.js';
 import { getMessage, getViewTypeLabel, isJapanese } from '../../shared/i18n.js';
 
 // プリセット保存
@@ -273,51 +271,24 @@ export async function applyPreset(presetId, buttonElement) {
     const settings = await loadSettings();
     const shouldApplyViewType = preset.applyViewType ?? settings.applyViewTypeByDefault;
 
-    // ========================================
-    // 表示形式の切り替え処理
-    // ========================================
-    // viewType が保存されていて、かつ切り替え設定がONの場合
+    // 表示形式切り替え（ページリロードなし）
     if (preset.viewType && shouldApplyViewType) {
-      // 現在のURLから新しいURLを構築
-      const currentUrl = tab.url;
-      const urlParts = currentUrl.split('/r/');
+      const result = await sendMessageToTab(tab.id, {
+        action: 'switchViewType',
+        viewType: preset.viewType
+      });
 
-      if (urlParts.length >= 2) {
-        const baseUrl = urlParts[0] + '/r/';
-        const newUrl = baseUrl + preset.viewType;
-
-        // URLが異なる場合のみ、表示形式を変更
-        if (currentUrl !== newUrl) {
-          const result = await waitForPageTransition(tab, currentUrl, newUrl, preset.viewType);
-
-          if (!result.success) {
-            showMessage(getMessage('msgViewTypeChangeCancelled'), 'info');
-            return; // カレンダー適用をスキップして終了
-          }
-        }
+      if (!result || !result.success) {
+        showMessage(getMessage('msgViewTypeChangeCancelled'), 'info');
+        return;
       }
-
-      // ========================================
-      // ステップ5: カレンダー状態を適用
-      // ========================================
-      // ページ読み込みが完了したが、Googleカレンダーのスクリプトが完全に初期化されるまで少し待つ
-      await new Promise(resolve => setTimeout(resolve, CALENDAR_INIT_DELAY_MS));
-
-      // カレンダーを適用
-      await sendMessageToTab(tab.id, {
-        action: 'applyPreset',
-        calendars: preset.calendars
-      });
-    } else {
-      // ========================================
-      // 表示形式の切り替えなし
-      // ========================================
-      // 表示形式の切り替えが不要な場合は、カレンダーのみ適用
-      await sendMessageToTab(tab.id, {
-        action: 'applyPreset',
-        calendars: preset.calendars
-      });
     }
+
+    // カレンダー状態を適用
+    await sendMessageToTab(tab.id, {
+      action: 'applyPreset',
+      calendars: preset.calendars
+    });
 
     showMessage(getMessage('msgPresetApplied', preset.name), 'success');
   } catch (error) {

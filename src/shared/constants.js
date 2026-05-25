@@ -44,14 +44,6 @@ export const MAX_PRESET_NAME_LENGTH = 100;
 // カレンダー項目検出時の最大テキスト長
 export const MAX_CALENDAR_TEXT_LENGTH = 200;
 
-// プリセット適用時のタイミング設定（表示形式切り替え時）
-export const URL_CHANGE_POLL_INTERVAL_MS = 100;      // URL変更を確認する間隔（ms）
-export const URL_CHANGE_MAX_ATTEMPTS = 50;           // 最大試行回数（100ms × 50 = 5秒）
-export const EARLY_CANCEL_DETECTION_THRESHOLD = 10;  // 早期キャンセル検知の閾値（100ms × 10 = 1秒）
-export const PAGE_LOAD_TIMEOUT_MS = 5000;            // ページ読み込みのタイムアウト（ms）
-export const POST_TIMEOUT_MAX_CHECKS = 50;           // タイムアウト後の追加確認回数（100ms × 50 = 5秒）
-export const CALENDAR_INIT_DELAY_MS = 500;           // カレンダー初期化待機時間（ms）
-
 /**
  * カレンダーグループ判定用キーワード
  * 折りたたまれているグループを展開する際に、カレンダーグループかどうかを判定するために使用
