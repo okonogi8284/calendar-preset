@@ -44,13 +44,29 @@ export const MAX_PRESET_NAME_LENGTH = 100;
 // カレンダー項目検出時の最大テキスト長
 export const MAX_CALENDAR_TEXT_LENGTH = 200;
 
-// プリセット適用時のタイミング設定（表示形式切り替え時）
-export const URL_CHANGE_POLL_INTERVAL_MS = 100;      // URL変更を確認する間隔（ms）
-export const URL_CHANGE_MAX_ATTEMPTS = 50;           // 最大試行回数（100ms × 50 = 5秒）
-export const EARLY_CANCEL_DETECTION_THRESHOLD = 10;  // 早期キャンセル検知の閾値（100ms × 10 = 1秒）
-export const PAGE_LOAD_TIMEOUT_MS = 5000;            // ページ読み込みのタイムアウト（ms）
-export const POST_TIMEOUT_MAX_CHECKS = 50;           // タイムアウト後の追加確認回数（100ms × 50 = 5秒）
-export const CALENDAR_INIT_DELAY_MS = 500;           // カレンダー初期化待機時間（ms）
+/**
+ * サポートする表示形式の一覧
+ *
+ * Google カレンダーの URL パス `/r/{id}` に対応する viewType と、
+ * i18n 表示用のメッセージキー・英語フォールバックの組。
+ *
+ * 新しい表示形式を追加する場合はここに 1 行追加するだけで、
+ * view-type.js / utils.js / i18n.js すべてに反映される。
+ * ただし対応する labelKey のメッセージは _locales/{ja,en}/messages.json
+ * の両方に追加すること。
+ */
+export const VIEW_TYPES = [
+  { id: 'day', labelKey: 'viewTypeDay', fallback: 'Day' },
+  { id: 'week', labelKey: 'viewTypeWeek', fallback: 'Week' },
+  { id: 'month', labelKey: 'viewTypeMonth', fallback: 'Month' },
+  { id: 'year', labelKey: 'viewTypeYear', fallback: 'Year' },
+  { id: 'agenda', labelKey: 'viewTypeAgenda', fallback: 'Schedule' },
+  { id: 'customweek', labelKey: 'viewTypeCustomWeek', fallback: 'Custom (Week)' },
+  { id: 'customday', labelKey: 'viewTypeCustomDay', fallback: 'Custom (Day)' }
+];
+
+// SPA ルーティング（switchViewType）で DOM が再構築されるまで待つ時間（ms）
+export const DOM_REBUILD_WAIT_MS = 150;
 
 /**
  * カレンダーグループ判定用キーワード

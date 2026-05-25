@@ -1,3 +1,5 @@
+import { VIEW_TYPES } from '../../shared/constants.js';
+
 // チェックボックスの状態を設定（イベントも発火）
 export function setCheckboxState(checkbox, checked) {
   if (checkbox.checked !== checked) {
@@ -111,16 +113,9 @@ export function getCalendarId(checkbox) {
 
 // 現在の表示形式を取得
 export function getCurrentViewType() {
-  const url = window.location.href;
+  const match = window.location.href.match(/\/r\/([^/?#]+)/);
+  if (!match) return null;
 
-  // URLパターンをチェック
-  if (url.includes('/r/day')) return 'day';
-  if (url.includes('/r/week')) return 'week';
-  if (url.includes('/r/month')) return 'month';
-  if (url.includes('/r/year')) return 'year';
-  if (url.includes('/r/agenda')) return 'agenda';
-  if (url.includes('/r/customweek')) return 'customweek';
-  if (url.includes('/r/customday')) return 'customday';
-
-  return null;
+  const candidate = match[1];
+  return VIEW_TYPES.some(v => v.id === candidate) ? candidate : null;
 }

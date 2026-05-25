@@ -1,5 +1,6 @@
 import { getCurrentState } from './calendar/state.js';
 import { applyPreset, selectAll, deselectAll } from './calendar/actions.js';
+import { switchViewType } from './calendar/view-type.js';
 
 // メッセージリスナー
 export function initMessageHandler() {
@@ -16,7 +17,7 @@ export function initMessageHandler() {
     }
 
     // 許可されたアクションのみ
-    const allowedActions = ['getCurrentState', 'applyPreset', 'selectAll', 'deselectAll'];
+    const allowedActions = ['getCurrentState', 'applyPreset', 'selectAll', 'deselectAll', 'switchViewType'];
     if (!allowedActions.includes(request.action)) {
       sendResponse({ error: 'Unknown action' });
       return true;
@@ -49,6 +50,12 @@ export function initMessageHandler() {
               : true;
             await deselectAll(includePrimary);
             return { success: true };
+
+          case 'switchViewType':
+            if (typeof request.viewType !== 'string') {
+              return { error: 'Invalid viewType parameter' };
+            }
+            return await switchViewType(request.viewType);
 
           default:
             return { error: 'Unknown action' };

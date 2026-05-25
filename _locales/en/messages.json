@@ -167,8 +167,8 @@
   "msgApplying": {
     "message": "Applying..."
   },
-  "msgViewTypeChangeCancelled": {
-    "message": "View type change was cancelled"
+  "msgViewTypeChangeFailed": {
+    "message": "Failed to change view type"
   },
   "msgApplyFailed": {
     "message": "Apply failed. Please reload the page"

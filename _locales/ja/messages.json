@@ -167,8 +167,8 @@
   "msgApplying": {
     "message": "適用中..."
   },
-  "msgViewTypeChangeCancelled": {
-    "message": "表示形式の変更がキャンセルされました"
+  "msgViewTypeChangeFailed": {
+    "message": "表示形式を切り替えられませんでした"
   },
   "msgApplyFailed": {
     "message": "適用に失敗しました。ページを再読み込みしてください"

@@ -1,5 +1,7 @@
 // i18n ユーティリティ
 
+import { VIEW_TYPES } from './constants.js';
+
 /**
  * 現在のUIロケールが日本語かどうかを判定
  * @returns {boolean} 日本語の場合true
@@ -21,41 +23,17 @@ export function getMessage(key, substitutions) {
 
 /**
  * 表示形式のラベルを取得（i18n対応）
- * @param {string} viewType 表示形式のキー（day, week, month, year, agenda, customweek, customday）
+ * @param {string} viewType 表示形式のキー（VIEW_TYPES の id）
  * @returns {string} ローカライズされたラベル
  */
 export function getViewTypeLabel(viewType) {
   if (!viewType) return '-';
 
-  const keyMap = {
-    'day': 'viewTypeDay',
-    'week': 'viewTypeWeek',
-    'month': 'viewTypeMonth',
-    'year': 'viewTypeYear',
-    'agenda': 'viewTypeAgenda',
-    'customweek': 'viewTypeCustomWeek',
-    'customday': 'viewTypeCustomDay'
-  };
+  const entry = VIEW_TYPES.find(v => v.id === viewType);
+  if (!entry) return viewType;
 
-  const key = keyMap[viewType];
-  if (key) {
-    const message = chrome.i18n.getMessage(key);
-    if (message) {
-      return message;
-    }
-  }
-
-  // フォールバック（英語）
-  const fallback = {
-    'day': 'Day',
-    'week': 'Week',
-    'month': 'Month',
-    'year': 'Year',
-    'agenda': 'Schedule',
-    'customweek': 'Custom (Week)',
-    'customday': 'Custom (Day)'
-  };
-  return fallback[viewType] || viewType;
+  const message = chrome.i18n.getMessage(entry.labelKey);
+  return message || entry.fallback;
 }
 
 /**
