@@ -279,7 +279,8 @@ export async function applyPreset(presetId, buttonElement) {
       });
 
       if (!result || !result.success) {
-        showMessage(getMessage('msgViewTypeChangeCancelled'), 'info');
+        console.warn('switchViewType failed:', result?.reason ?? 'no_response');
+        showMessage(getMessage('msgViewTypeChangeFailed'), 'error');
         return;
       }
     }

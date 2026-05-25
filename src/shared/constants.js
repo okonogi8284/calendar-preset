@@ -45,6 +45,30 @@ export const MAX_PRESET_NAME_LENGTH = 100;
 export const MAX_CALENDAR_TEXT_LENGTH = 200;
 
 /**
+ * サポートする表示形式の一覧
+ *
+ * Google カレンダーの URL パス `/r/{id}` に対応する viewType と、
+ * i18n 表示用のメッセージキー・英語フォールバックの組。
+ *
+ * 新しい表示形式を追加する場合はここに 1 行追加するだけで、
+ * view-type.js / utils.js / i18n.js すべてに反映される。
+ * ただし対応する labelKey のメッセージは _locales/{ja,en}/messages.json
+ * の両方に追加すること。
+ */
+export const VIEW_TYPES = [
+  { id: 'day', labelKey: 'viewTypeDay', fallback: 'Day' },
+  { id: 'week', labelKey: 'viewTypeWeek', fallback: 'Week' },
+  { id: 'month', labelKey: 'viewTypeMonth', fallback: 'Month' },
+  { id: 'year', labelKey: 'viewTypeYear', fallback: 'Year' },
+  { id: 'agenda', labelKey: 'viewTypeAgenda', fallback: 'Schedule' },
+  { id: 'customweek', labelKey: 'viewTypeCustomWeek', fallback: 'Custom (Week)' },
+  { id: 'customday', labelKey: 'viewTypeCustomDay', fallback: 'Custom (Day)' }
+];
+
+// SPA ルーティング（switchViewType）で DOM が再構築されるまで待つ時間（ms）
+export const DOM_REBUILD_WAIT_MS = 150;
+
+/**
  * カレンダーグループ判定用キーワード
  * 折りたたまれているグループを展開する際に、カレンダーグループかどうかを判定するために使用
  * 新しい言語を追加する場合はここにキーワードを追加
