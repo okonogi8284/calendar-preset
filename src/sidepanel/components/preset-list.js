@@ -1,13 +1,5 @@
 import { loadPresets } from '../services/storage.js';
 import { toggleMenu, closeAllMenus } from './menu.js';
-import {
-  handleDragStart,
-  handleDragOver,
-  handleDrop,
-  handleDragEnd,
-  handleDragEnter,
-  handleDragLeave
-} from './drag-drop.js';
 import { getMessage } from '../../shared/i18n.js';
 
 // プリセット一覧を表示
@@ -48,7 +40,6 @@ export async function renderPresets(editPresetCallback, deletePresetCallback, ap
   for (const [id, preset] of sortedPresets) {
     const presetItem = document.createElement('div');
     presetItem.className = 'preset-item';
-    presetItem.draggable = true;
     presetItem.dataset.presetId = id;
 
     const nameSpan = document.createElement('span');
@@ -127,14 +118,6 @@ export async function renderPresets(editPresetCallback, deletePresetCallback, ap
 
     presetItem.appendChild(nameSpan);
     presetItem.appendChild(buttonsDiv);
-
-    // ドラッグイベントリスナーを追加
-    presetItem.addEventListener('dragstart', handleDragStart);
-    presetItem.addEventListener('dragover', handleDragOver);
-    presetItem.addEventListener('drop', handleDrop);
-    presetItem.addEventListener('dragend', handleDragEnd);
-    presetItem.addEventListener('dragenter', handleDragEnter);
-    presetItem.addEventListener('dragleave', handleDragLeave);
 
     presetList.appendChild(presetItem);
   }

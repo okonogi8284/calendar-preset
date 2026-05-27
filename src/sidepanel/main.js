@@ -4,6 +4,7 @@ import { loadSettings, saveSettings, loadIncludePrimarySetting, saveIncludePrima
 import { isCalendarTab, getActiveTab, sendMessageToTab } from './services/tabs.js';
 import { initMenuListeners } from './components/menu.js';
 import { renderPresets } from './components/preset-list.js';
+import { attachReorderHandlers } from './components/drag-drop.js';
 import {
   savePreset,
   editPreset,
@@ -101,6 +102,7 @@ async function init() {
 
   // プリセット一覧を表示
   await renderPresets(editPreset, deletePreset, applyPreset);
+  attachReorderHandlers(document.getElementById('presetList'));
 
   // includePrimary設定を読み込み
   const includePrimary = await loadIncludePrimarySetting();

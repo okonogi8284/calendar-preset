@@ -1,129 +1,170 @@
 import { loadPresets, savePresets } from '../services/storage.js';
+import { closeAllMenus } from './menu.js';
 
-// ドラッグ&ドロップの閾値設定
-const DRAG_THRESHOLD_RATIO = 0.3;  // 上下30%の検出ゾーン（残り中央40%）
+const ANIM_MS = 220;
+const DRAG_THRESHOLD_PX = 5;
 
-// ドラッグ&ドロップの状態管理
-let draggedElement = null;
+let listEl = null;
+let ghostEl = null;
+let pressState = null;
+let dragState = null;
 
-// ドラッグ&ドロップイベントハンドラ
-export function handleDragStart(e) {
-  draggedElement = this;
-  this.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/html', this.innerHTML);
+export function attachReorderHandlers(listElement) {
+  if (listEl) return;
+  listEl = listElement;
+  ghostEl = document.getElementById('dragGhost');
+
+  listEl.addEventListener('pointerdown', onPointerDown);
+  document.addEventListener('pointermove', onPointerMove);
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
 }
 
-export function handleDragOver(e) {
-  if (e.preventDefault) {
-    e.preventDefault();
-  }
-  e.dataTransfer.dropEffect = 'move';
+function onPointerDown(e) {
+  if (e.button !== 0 && e.pointerType === 'mouse') return;
+  if (e.target.closest('button')) return;
+  if (e.target.closest('.menu-dropdown')) return;
 
-  if (this !== draggedElement) {
-    // ドラッグ中の要素の直前・直後かチェック
-    const isDraggedPrev = this.nextElementSibling === draggedElement;
-    const isDraggedNext = this.previousElementSibling === draggedElement;
+  const item = e.target.closest('.preset-item');
+  if (!item) return;
 
-    // マウスの位置を取得
-    const rect = this.getBoundingClientRect();
-    const threshold = rect.height * DRAG_THRESHOLD_RATIO;
-    const mouseY = e.clientY - rect.top;
+  pressState = {
+    item,
+    startX: e.clientX,
+    startY: e.clientY,
+  };
+}
 
-    // マウスが要素の上30%にあるか、下30%にあるかで判定
-    this.classList.remove('drag-over-top', 'drag-over-bottom');
-
-    let showTop = false;
-    let showBottom = false;
-
-    if (mouseY < threshold) {
-      showTop = true;
-    } else if (mouseY > rect.height - threshold) {
-      showBottom = true;
+function onPointerMove(e) {
+  if (pressState && !dragState) {
+    const dx = e.clientX - pressState.startX;
+    const dy = e.clientY - pressState.startY;
+    if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
+      startDrag(e);
     } else {
-      // 中央40%の範囲では、より近い方を選択
-      const midPoint = rect.height / 2;
-      if (mouseY < midPoint) {
-        showTop = true;
-      } else {
-        showBottom = true;
-      }
-    }
-
-    // ドラッグ中の要素の直後の要素の上部にはラインを表示しない
-    if (showTop && isDraggedNext) {
-      showTop = false;
-    }
-
-    // ドラッグ中の要素の直前の要素の下部にはラインを表示しない
-    if (showBottom && isDraggedPrev) {
-      showBottom = false;
-    }
-
-    if (showTop) {
-      this.classList.add('drag-over-top');
-    } else if (showBottom) {
-      this.classList.add('drag-over-bottom');
+      return;
     }
   }
 
-  return false;
-}
+  if (!dragState) return;
 
-export function handleDragEnter(e) {
-  // dragover で処理するため、ここでは何もしない
-}
+  ghostEl.style.left = (e.clientX - dragState.offsetX) + 'px';
+  ghostEl.style.top = (e.clientY - dragState.offsetY) + 'px';
 
-export function handleDragLeave(e) {
-  this.classList.remove('drag-over-top', 'drag-over-bottom');
-}
+  const target = elementUnder(e.clientX, e.clientY);
+  if (!target || target === dragState.placeholder) return;
 
-export function handleDrop(e) {
-  if (e.stopPropagation) {
-    e.stopPropagation();
-  }
+  const rect = target.getBoundingClientRect();
+  const isBefore = (e.clientY - rect.top) < rect.height / 2;
 
-  if (draggedElement !== this) {
-    // drag-over-topまたはdrag-over-bottomクラスに基づいて挿入位置を決定
-    const insertBefore = this.classList.contains('drag-over-top');
+  if (isBefore && target.previousElementSibling === dragState.placeholder) return;
+  if (!isBefore && target.nextElementSibling === dragState.placeholder) return;
 
-    if (insertBefore) {
-      // 上部ラインが表示されている場合、この要素の前に挿入
-      this.parentNode.insertBefore(draggedElement, this);
+  flipAnimate(() => {
+    if (isBefore) {
+      target.parentNode.insertBefore(dragState.placeholder, target);
     } else {
-      // 下部ラインが表示されている場合、この要素の後に挿入
-      this.parentNode.insertBefore(draggedElement, this.nextSibling);
+      target.parentNode.insertBefore(dragState.placeholder, target.nextSibling);
     }
-
-    // 順序を保存
-    savePresetOrder();
-  }
-
-  this.classList.remove('drag-over-top', 'drag-over-bottom');
-  return false;
-}
-
-export function handleDragEnd(e) {
-  this.classList.remove('dragging');
-
-  // すべてのdrag-overクラスを削除
-  document.querySelectorAll('.preset-item').forEach(item => {
-    item.classList.remove('drag-over-top', 'drag-over-bottom');
   });
 }
 
-// プリセットの順序を保存
+function startDrag(e) {
+  closeAllMenus();
+
+  const { item } = pressState;
+  const rect = item.getBoundingClientRect();
+  const offsetX = e.clientX - rect.left;
+  const offsetY = e.clientY - rect.top;
+
+  ghostEl.textContent = '';
+  const clone = item.cloneNode(true);
+  clone.classList.remove('dragging');
+  ghostEl.appendChild(clone);
+  ghostEl.style.width = rect.width + 'px';
+  ghostEl.style.left = (e.clientX - offsetX) + 'px';
+  ghostEl.style.top = (e.clientY - offsetY) + 'px';
+  ghostEl.style.display = 'block';
+
+  const placeholder = document.createElement('div');
+  placeholder.className = 'preset-placeholder';
+  placeholder.style.height = rect.height + 'px';
+  item.parentNode.insertBefore(placeholder, item);
+
+  item.classList.add('dragging');
+  document.body.classList.add('is-dragging');
+
+  dragState = { item, placeholder, offsetX, offsetY };
+  pressState = null;
+}
+
+function endDrag() {
+  pressState = null;
+  if (!dragState) return;
+
+  const { item, placeholder } = dragState;
+  if (placeholder && placeholder.parentNode) {
+    placeholder.parentNode.replaceChild(item, placeholder);
+  }
+  item.classList.remove('dragging');
+
+  ghostEl.style.display = 'none';
+  ghostEl.textContent = '';
+  document.body.classList.remove('is-dragging');
+  dragState = null;
+
+  savePresetOrder();
+}
+
+function elementUnder(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  const item = el.closest('.preset-item, .preset-placeholder');
+  if (!item || !listEl.contains(item)) return null;
+  if (item.classList.contains('dragging')) return null;
+  return item;
+}
+
+function flipAnimate(mutator) {
+  const items = [...listEl.children].filter(el => !el.classList.contains('dragging'));
+  const firstRects = new Map();
+  items.forEach(el => firstRects.set(el, el.getBoundingClientRect()));
+
+  mutator();
+
+  items.forEach(el => {
+    const first = firstRects.get(el);
+    if (!first || !el.isConnected) return;
+    const last = el.getBoundingClientRect();
+    const dy = first.top - last.top;
+    if (dy === 0) return;
+
+    el.style.transition = 'none';
+    el.style.transform = `translateY(${dy}px)`;
+    requestAnimationFrame(() => {
+      el.style.transition = `transform ${ANIM_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+      el.style.transform = '';
+    });
+    setTimeout(() => {
+      el.style.transition = '';
+      el.style.transform = '';
+    }, ANIM_MS + 30);
+  });
+}
+
 async function savePresetOrder() {
   const presets = await loadPresets();
-  const presetList = document.getElementById('presetList');
-  const presetItems = presetList.querySelectorAll('.preset-item');
+  const items = listEl.querySelectorAll('.preset-item');
 
-  presetItems.forEach((item, index) => {
+  let changed = false;
+  items.forEach((item, index) => {
     const presetId = item.dataset.presetId;
-    if (presets[presetId]) {
+    if (presets[presetId] && presets[presetId].order !== index) {
       presets[presetId].order = index;
+      changed = true;
     }
   });
 
+  if (!changed) return;
   await savePresets(presets);
 }
