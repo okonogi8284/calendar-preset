@@ -264,10 +264,6 @@ body.is-dragging * {
   display: block;
 }
 
-.menu-container.open-upward .menu-dropdown {
-  /* 上向きに開く場合のスタイル（JavaScriptで動的に設定） */
-}
-
 .menu-item {
   display: flex;
   align-items: center;
@@ -536,7 +532,6 @@ body.is-dragging * {
   vertical-align: middle;
   display: inline-block;
   -webkit-user-drag: none;
-  user-drag: none;
 }
 
 /* ボタン内のアイコン */
