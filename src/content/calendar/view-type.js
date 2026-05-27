@@ -5,8 +5,16 @@ const VALID_VIEW_TYPES = new Set(VIEW_TYPES.map(v => v.id));
 /**
  * Google カレンダーの表示形式を、ページリロードなしで切り替える
  *
- * URL パスの /r/{viewType} 部分を history.pushState で書き換え、
- * popstate イベントを発火して Google カレンダーの SPA ルーターに反応させる。
+ * URL パスの '/r' セグメントを起点に viewType を置換または挿入し、
+ * history.pushState で書き換えた上で popstate を発火して SPA ルーターに反応させる。
+ *
+ * URL 形態別の挙動：
+ *   - /r           → /r/{viewType} （挿入）
+ *   - /r/          → /r/{viewType} （空セグメントを置換）
+ *   - /r/{既知view}[/...]  → /r/{viewType}[/...] （後続の日付やイベントID 等は保持）
+ *   - /r/{未知モード}[/...] → /r/{viewType}        （/r/eventedit/{id} 等。モード固有の
+ *                                                   後続は view URL で描画できないため破棄）
+ *   - /r を含まない URL    → unsupported_url_format
  *
  * @param {string} viewType - 切り替え先の viewType（VIEW_TYPES の id）
  * @returns {Promise<{ success: boolean, reason?: 'invalid_view_type' | 'unsupported_url_format', alreadyInTargetView?: boolean }>}
