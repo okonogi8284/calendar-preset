@@ -122,7 +122,7 @@ button:active {
 }
 
 .preset-list {
-  max-height: 300px;
+  max-height: 310px;
   overflow-y: auto;
 }
 
@@ -134,8 +134,10 @@ button:active {
   margin-bottom: 8px;
   background-color: #f8f9fa;
   border-radius: 6px;
-  transition: background-color 0.2s, opacity 0.2s, transform 0.2s;
-  cursor: move;
+  transition: background-color 0.2s;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
   position: relative;
 }
 
@@ -148,30 +150,44 @@ button:active {
 }
 
 .preset-item.dragging {
-  opacity: 0.5;
-  transform: scale(0.98);
+  cursor: grabbing;
+  position: absolute;
+  left: -10000px;
+  top: -10000px;
+  pointer-events: none;
 }
 
-.preset-item.drag-over-top::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: #1a73e8;
-  z-index: 1000;
+body.is-dragging,
+body.is-dragging * {
+  cursor: grabbing !important;
 }
 
-.preset-item.drag-over-bottom::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: #1a73e8;
-  z-index: 1000;
+.preset-placeholder {
+  background-color: #f1f3f4;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.preset-placeholder:last-child {
+  margin-bottom: 0;
+}
+
+#dragGhost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.95;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
+  transform: rotate(-1.5deg);
+  border-radius: 6px;
+  display: none;
+  background: white;
+  will-change: transform, top, left;
+}
+
+#dragGhost .preset-item {
+  margin: 0;
+  background: white;
 }
 
 .preset-name {
@@ -246,10 +262,6 @@ button:active {
 
 .menu-container.open .menu-dropdown {
   display: block;
-}
-
-.menu-container.open-upward .menu-dropdown {
-  /* 上向きに開く場合のスタイル（JavaScriptで動的に設定） */
 }
 
 .menu-item {
@@ -519,6 +531,7 @@ button:active {
   height: 20px;
   vertical-align: middle;
   display: inline-block;
+  -webkit-user-drag: none;
 }
 
 /* ボタン内のアイコン */
